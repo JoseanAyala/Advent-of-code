@@ -9,6 +9,17 @@ import (
 	"strconv"
 )
 
+func scanFile() *bufio.Scanner {
+	pathPtr := flag.String("path", "./input.txt", "Path")
+	flag.Parse()
+
+	file, err := os.Open(*pathPtr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return bufio.NewScanner(file)
+}
+
 func readFile(scanner *bufio.Scanner) *[]string {
 	coordinates := make([]string, 0)
 
@@ -35,15 +46,7 @@ func readFile(scanner *bufio.Scanner) *[]string {
 }
 
 func main() {
-	pathPtr := flag.String("path", "./input.txt", "Path")
-	flag.Parse()
-
-	file, err := os.Open(*pathPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	coordinates := readFile(bufio.NewScanner(file))
+	coordinates := readFile(scanFile())
 
 	finalSum := 0
 	for _, coor := range *coordinates {
