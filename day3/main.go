@@ -70,46 +70,55 @@ func fileToMatrix(scanner *bufio.Scanner) (*grid, *[]coordinate) {
 
 func fetchNumber(centerPoint coordinate, matrixPtr *grid, visitedPtr *map[coordinate]bool) int {
 	matrix := (*matrixPtr)
+	visited := (*visitedPtr)
 
-	left, right := -1, 1
-	lastLeft, lastRight := -1, 1
-	// TODO: error due to line 71 of input data, verify right logic
+	leftOffset, rightOffset := -1, 1
+	shouldStopLeft, shouldStopRight := false, false
 	for {
-		leftOffset := centerPoint.x + left
-		(*visitedPtr)[coordinate{y: centerPoint.y, x: leftOffset}] = true
-		if leftOffset > 0 && isNumber(matrix[centerPoint.y][leftOffset]) {
-			left--
+		left := centerPoint.x + leftOffset
+		visited[coordinate{y: centerPoint.y, x: left}] = true
+
+		if left == 0 {
+			shouldStopLeft = true
 		}
 
-		rightOffset := centerPoint.x + right
-		(*visitedPtr)[coordinate{y: centerPoint.y, x: rightOffset}] = true
-		if rightOffset < len(matrix[centerPoint.y]) && isNumber(matrix[centerPoint.y][rightOffset]) {
-			right++
+		if isNumber(matrix[centerPoint.y][left]) {
+			if !shouldStopLeft {
+				leftOffset--
+			}
+		} else {
+			leftOffset++
+			shouldStopLeft = true
 		}
 
-		if left == lastLeft && right == lastRight {
+		right := centerPoint.x + rightOffset
+		visited[coordinate{y: centerPoint.y, x: right}] = true
+
+		if right == len(matrix[centerPoint.y])-1 {
+			shouldStopRight = true
+		}
+
+		if isNumber(matrix[centerPoint.y][right]) {
+			if !shouldStopRight {
+				rightOffset++
+			}
+		} else {
+			rightOffset--
+			shouldStopRight = true
+		}
+
+		if shouldStopLeft && shouldStopRight {
 			break
 		}
-
-		lastLeft = left
-		lastRight = right
 	}
 
-	// Clean off sides
-	leftOffset := centerPoint.x + left
-	if leftOffset < 0 || !isNumber(matrix[centerPoint.y][leftOffset]) {
-		leftOffset++
-	}
-	rightOffset := centerPoint.x + right
-	if rightOffset < len(matrix[centerPoint.y]) || !isNumber(matrix[centerPoint.y][rightOffset]) {
-		rightOffset--
-	}
+	left := centerPoint.x + leftOffset
+	right := centerPoint.x + rightOffset
 
-	strNum := strings.Join(matrix[centerPoint.y][leftOffset:rightOffset+1], "")
+	strNum := strings.Join(matrix[centerPoint.y][left:right+1], "")
 	num, err := strconv.Atoi(strNum)
 	if err != nil {
-		fmt.Println(strNum)
-		log.Fatal("found character in cast")
+		log.Fatal("found string in cast")
 	}
 
 	return num
@@ -158,7 +167,6 @@ func processSymbol(centerPoint coordinate, matrixPtr *grid) int {
 		cell := matrix[point.y][point.x]
 
 		if isNumber(cell) {
-			fmt.Println("For "+matrix[centerPoint.y][centerPoint.x], "in", centerPoint, "found number")
 			amount += fetchNumber(point, matrixPtr, &visited)
 		}
 
@@ -174,5 +182,5 @@ func main() {
 	for _, coord := range *symbolsToVerify {
 		amount += processSymbol(coord, matrix)
 	}
-	fmt.Println(amount)
+	fmt.Println("Result is", amount)
 }
